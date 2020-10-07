@@ -9,9 +9,13 @@ polls_bp = Blueprint('polls_bp', __name__)
 def get_all_polls():
     polls = []
     polls = Poll.get_all()
-    current_app.logger.info(polls)
     return jsonify(success=True, result=polls), 200
 
+@polls_bp.route('/labels', methods=['GET'])
+def get_by_label():
+    labels = request.args.to_dict()
+    polls = Poll.get_by_labels(labels)
+    return jsonify(success=True, result=polls), 200
 
 @polls_bp.route('/create', methods=['POST'])
 def create_poll():

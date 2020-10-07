@@ -36,7 +36,7 @@ class Answer(Document):
 class Poll(Document):
     date = DateTimeField(default=datetime.datetime.utcnow)
     author = StringField()
-    labels = ListField()
+    labels = DictField()
     questions = ListField()
     possible_answers = ListField()
     related_answers = ListField()
@@ -66,13 +66,23 @@ class Poll(Document):
             item['id'] = str(item['_id'])
             del(item['_id'])
             output.append(item)
-        return list(result)
+        return list(output)
 
     @classmethod
     def get_by_id(cls, id):
         result = cls.objects(id=id)
         return result
 
+    @classmethod
+    def get_by_labels(cls,labels:dict)->list:
+        output = []
+        result = cls.objects(labels=labels).as_pymongo()
+        for index, item in enumerate(result):
+            item['id'] = str(item['_id'])
+            del(item['_id'])
+            output.append(item)
+        return list(output)
+        
     @staticmethod
     def _check_answers_len(answers_list: list) -> bool:
         return all([True if len(answers) <= 4 else False for answers in answers_list])
