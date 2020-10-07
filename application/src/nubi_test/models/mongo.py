@@ -21,15 +21,16 @@ class Answer(Document):
             answer_instance = cls(
                 author=author, answers=answers, related_poll=poll_id)
             answer_instance.save()
-            related_poll.update_one(push__related_answers=str(answer_instance.id))
+            related_poll.update_one(
+                push__related_answers=str(answer_instance.id))
             return dict(status=True, result='Everything is OK!')
         else:
             error = "The answers list is either empty or its length doesnt fit with the poll questions list.."
         return dict(status=False, result=error)
 
     @staticmethod
-    def _check_valid_answers(answers:list, possible_answers:list)->bool:
-        return any([True for index, answer in enumerate(answers) if answer in possible_answers[index]])
+    def _check_valid_answers(answers: list, possible_answers: list) -> bool:
+        return any([True if answer in possible_answers[index] else False for index, answer in enumerate(answers) ])
 
 
 class Poll(Document):
@@ -48,13 +49,13 @@ class Poll(Document):
         possible_answers = poll_template.get('possible_answers', [])
         current_app.logger.info(
             f"{author}   {labels}   {questions}   {possible_answers}")
-        if questions != [] and len(questions) == len(possible_answers):
+        if questions != [] and len(questions) == len(possible_answers) and cls._check_answers_len(possible_answers):
             poll_instance = cls(author=author, labels=labels, questions=questions,
                                 possible_answers=possible_answers, related_answers=[])
             poll_instance.save()
             return dict(status=True, result='Everything is OK!')
         else:
-            error = "The questions list is either empty or its length doesnt fit with the possible answers list.."
+            error = "The questions list is either empty or there is a problem with answers length.."
         return dict(status=False, result=error)
 
     @classmethod
@@ -71,3 +72,7 @@ class Poll(Document):
     def get_by_id(cls, id):
         result = cls.objects(id=id)
         return result
+
+    @staticmethod
+    def _check_answers_len(answers_list: list) -> bool:
+        return all([True if len(answers) <= 4 else False for answers in answers_list])
