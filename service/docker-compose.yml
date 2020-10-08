@@ -10,6 +10,8 @@ services:
       - MONGO_USER=root
       - MONGO_PASSWORD=password
       - MONGO_DB=nubi-test-db
+      - SESSION_KEY=1234
+      - SESSION_TYPE=filesystem
     ports:
       - 8080:8080
     volumes:
