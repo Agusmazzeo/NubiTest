@@ -1,4 +1,4 @@
-from flask import Blueprint, current_app, jsonify, request
+from flask import Blueprint, current_app, jsonify, request, session
 
 from nubi_test.models.mongo import Poll, Answer
 
@@ -9,31 +9,39 @@ polls_bp = Blueprint('polls_bp', __name__)
 def get_all_polls():
     polls = []
     polls = Poll.get_all()
-    return jsonify(success=True, result=polls), 200
+    return jsonify(success=polls['status'], result=polls['result']), 200
 
 @polls_bp.route('/labels', methods=['GET'])
 def get_by_label():
     labels = request.args.to_dict()
     polls = Poll.get_by_labels(labels)
-    return jsonify(success=True, result=polls), 200
+    return jsonify(success=polls['status'], result=polls['result']), 200
 
 @polls_bp.route('/create', methods=['POST'])
 def create_poll():
+    output = {}
     current_app.logger.info("A new poll was received.")
-    if request.mimetype != 'application/json':
-        current_app.logger.info(
-            "Job submission received with incorrect Content-Type. Must be 'application/json'")
-        return jsonify(success=False), 400
+    user_id = session.get('user')
+    if user_id:
+        if request.mimetype != 'application/json':
+            current_app.logger.info(
+                "Job submission received with incorrect Content-Type. Must be 'application/json'")
+            return jsonify(success=False), 400
 
-    poll_template = request.get_json()
-    output = Poll.create(poll_template)
-    if output['status']:
-        message = "The poll was succesfully saved!"
-        current_app.logger.info(message)
-        status_code = 200
+        poll_template = request.get_json()
+        poll_template['author'] = user_id
+        output = Poll.create(poll_template)
+        if output['status']:
+            message = "The poll was succesfully saved!"
+            current_app.logger.info(message)
+            status_code = 200
+        else:
+            message = output['result']
+            current_app.logger.warning(message)
+            status_code = 400
     else:
-        message = output['result']
-        current_app.logger.warning(message)
+        output['status'] = False
+        message = "You must login before creating polls."
         status_code = 400
     return jsonify(success=output['status'], result=message), status_code
 
