@@ -16,7 +16,7 @@ services:
     ## DESCOMENTAR PARA DESARROLLO
       - ../application:/home/app
     user: root
-    command: bash -c "python3.8 -m pip install -r requirements.txt && python3.8 -m pip install -e . && gunicorn --config /home/app/config/gunicorn.conf.py -b 0.0.0.0:8080 'nubi_test.app:start_server()'"
+    command: bash -c "python3.8 -m pip install -r requirements-dev.txt && python3.8 -m pip install -e . && gunicorn --config /home/app/config/gunicorn.conf.py -b 0.0.0.0:8080 'nubi_test.app:start_server()'"
     networks:
       - test_net
 

@@ -1,7 +1,5 @@
 import datetime
 
-from flask import current_app
-
 from mongoengine import Document
 from mongoengine.fields import DateTimeField, StringField, DictField, ReferenceField, ListField
 
@@ -47,8 +45,6 @@ class Poll(Document):
         labels = poll_template.get('labels', ['default'])
         questions = poll_template.get('questions', [])
         possible_answers = poll_template.get('possible_answers', [])
-        current_app.logger.info(
-            f"{author}   {labels}   {questions}   {possible_answers}")
         if questions != [] and len(questions) == len(possible_answers) and cls._check_answers_len(possible_answers):
             poll_instance = cls(author=author, labels=labels, questions=questions,
                                 possible_answers=possible_answers, related_answers=[])

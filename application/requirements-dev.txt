@@ -1,0 +1,5 @@
+Flask==1.1.1
+Flask-Cors==3.0.8
+gunicorn==20.0.4
+mongoengine==0.20.0
+mongomock==3.20.0
