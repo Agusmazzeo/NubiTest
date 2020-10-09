@@ -80,11 +80,14 @@ class Answer(Document):
             author = answer_template.get('author', 'Unknown')
             answers = answer_template.get('answers', [])
             related_poll = Poll.get_by_id(poll_id)
-            if answers != [] and len(answers) == len(related_poll.first().questions) and cls._check_valid_answers(answers, related_poll.first().possible_answers):
+            if related_poll['status'] and answers != [] and \
+                len(answers) == len(related_poll['result'].first().questions) and \
+                cls._check_valid_answers(answers, related_poll['result'].first().possible_answers):
+
                 answer_instance = cls(
                     author=author, answers=answers, related_poll=poll_id)
                 answer_instance.save()
-                related_poll.update_one(
+                related_poll['result'].update_one(
                     push__related_answers=str(answer_instance.id))
                 status = True
                 result = 'Everything is OK!'
@@ -122,8 +125,8 @@ class Poll(Document):
                 poll_instance = cls(author=author, labels=labels, questions=questions,
                                     possible_answers=possible_answers, related_answers=[])
                 poll_instance.save()
-                status=True
-                result='Everything is OK!'
+                status = True
+                result = 'Everything is OK!'
             else:
                 status = False
                 result = "The questions list is either empty or there is a problem with answers length.."
@@ -160,6 +163,24 @@ class Poll(Document):
         except Exception as ex:
             status = False
             result = f"An error ocurred while querying one Poll:{ex}"
+
+        finally:
+            return {"status": status, "result": result}
+
+    @classmethod
+    def get_by_user(cls, user_id):
+        try:
+            output = []
+            status = True
+            result = cls.objects(author=user_id).as_pymongo()
+            for index, item in enumerate(result):
+                item['id'] = str(item['_id'])
+                del(item['_id'])
+                output.append(item)
+            result = output
+        except Exception as ex:
+            status = False
+            result = f"An error ocurred while querying user's Poll:{ex}"
 
         finally:
             return {"status": status, "result": result}
